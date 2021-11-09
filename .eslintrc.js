@@ -3,7 +3,7 @@
  * @Author: zenghua.wang
  * @Date: 2019-05-15 21:07:19
  * @LastEditors: zenghua.wang
- * @LastEditTime: 2021-11-09 09:44:32
+ * @LastEditTime: 2021-11-09 09:57:01
  */
 module.exports = {
   root: true,
@@ -20,12 +20,21 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
-    indent: ['warn', 'tab', { SwitchCase: 1 }],
-    quotes: ['warn', 'double'],
-    semi: ['error', 'always'],
+    'indent': [2, 2, {
+      'SwitchCase': 1
+    }],
+    'quotes': [2, 'single', {
+      'avoidEscape': true,
+      'allowTemplateLiterals': true
+    }],
+    'semi': [2, 'never'],
     'no-var': ['error'],
-    'no-console': ['off'],
-    'no-unused-vars': ['warn'],
-    'no-mixed-spaces-and-tabs': ['warn'],
+    'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',
+    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
+    'no-unused-vars': [2, {
+      'vars': 'all',
+      'args': 'none'
+    }],
+    'no-mixed-spaces-and-tabs': 2,
   },
 };

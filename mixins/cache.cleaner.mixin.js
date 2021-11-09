@@ -1,18 +1,25 @@
-'use strict';
+/*
+ * @Descripttion: 
+ * @Author: zenghua.wang
+ * @Date: 2020-11-04 10:55:25
+ * @LastEditors: zenghua.wang
+ * @LastEditTime: 2021-11-09 09:52:25
+ */
+"use strict";
 
 module.exports = function (eventNames) {
-    const events = {};
+	const events = {};
 
-    eventNames.forEach((name) => {
-        events[name] = function () {
-            if (this.broker.cacher) {
-                this.logger.debug(`Clear local '${this.name}' cache`);
-                this.broker.cacher.clean(`${this.name}.**`);
-            }
-        };
-    });
+	eventNames.forEach((name) => {
+		events[name] = function () {
+			if (this.broker.cacher) {
+				this.logger.debug(`Clear local '${this.name}' cache`);
+				this.broker.cacher.clean(`${this.name}.**`);
+			}
+		};
+	});
 
-    return {
-        events,
-    };
+	return {
+		events,
+	};
 };
