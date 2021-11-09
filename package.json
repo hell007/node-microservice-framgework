@@ -1,0 +1,47 @@
+{
+  "name": "node-microservices-framework",
+  "version": "1.0.0",
+  "description": "Moleculer microservice gateway",
+  "author": "1048523306@qq.com",
+  "scripts": {
+    "dev": "moleculer-runner --repl --hot services/**/*.service.js",
+    "start": "moleculer-runner",
+    "cli": "moleculer connect TCP",
+    "ci": "jest --watch",
+    "test": "jest --coverage",
+    "lint": "eslint services",
+    "dc:up": "docker-compose up --build -d",
+    "dc:down": "docker-compose down"
+  },
+  "keywords": [
+    "microservices",
+    "moleculer"
+  ],
+  "devDependencies": {
+    "eslint": "^7.7.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "jest": "^26.4.2",
+    "jest-cli": "^26.4.2",
+    "moleculer-repl": "^0.6.4"
+  },
+  "dependencies": {
+    "faker": "^5.1.0",
+    "ioredis": "^4.19.2",
+    "moleculer": "^0.14.10",
+    "moleculer-db": "^0.8.4",
+    "moleculer-db-adapter-mongo": "^0.4.7",
+    "moleculer-web": "^0.9.1"
+  },
+  "engines": {
+    "node": ">= 12.x.x",
+    "npm": ">= 6.14.x"
+  },
+  "jest": {
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node",
+    "rootDir": "./services",
+    "roots": [
+      "../test"
+    ]
+  }
+}
