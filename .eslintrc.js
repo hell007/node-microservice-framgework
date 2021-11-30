@@ -3,7 +3,7 @@
  * @Author: zenghua.wang
  * @Date: 2019-05-15 21:07:19
  * @LastEditors: zenghua.wang
- * @LastEditTime: 2021-11-09 09:57:01
+ * @LastEditTime: 2021-11-11 09:42:45
  */
 module.exports = {
   root: true,
@@ -37,4 +37,4 @@ module.exports = {
     }],
     'no-mixed-spaces-and-tabs': 2,
   },
-};
+}

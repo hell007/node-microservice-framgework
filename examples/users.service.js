@@ -1,3 +1,10 @@
+/*
+ * @Descripttion:
+ * @Author: zenghua.wang
+ * @Date: 2020-11-04 10:55:25
+ * @LastEditors: zenghua.wang
+ * @LastEditTime: 2021-11-26 17:44:33
+ */
 'use strict';
 
 const { MoleculerClientError } = require('moleculer').Errors;
@@ -10,35 +17,24 @@ module.exports = {
   name: 'users',
   version: 1,
   mixins: [DbService('users'), CacheCleanerMixin(['cache.clean.users', 'cache.clean.tasks'])],
-
-  /**
-   * Default settings
-   */
   settings: {
-    /** REST Basepath */
+    // REST Basepath
     rest: '/users',
-
-    /** Public fields */
-    fields: ['_id', 'name'],
-
-    /** Validator schema for entity */
+    // Public fields
+    fields: ['_id', 'name', 'age'],
+    // pageSize: 10,
+    // Validator schema for entity
     entityValidator: {
       name: { type: 'string', min: 3 },
     },
   },
-
-  /**
-   * Actions
-   */
   actions: {
-    /**
-     * Register a new user
-     *
-     * @actions
-     * @param {Object} user - User entity
-     *
-     * @returns {Object} Created entity
-     */
+    list: {
+      rest: 'GET /',
+    },
+    get: {
+      rest: 'GET /:id',
+    },
     create: {
       rest: 'POST /',
       params: {
@@ -49,8 +45,7 @@ module.exports = {
         await this.validateEntity(entity);
         const found = await this.adapter.findOne({ name: entity.name });
 
-        if (found)
-          throw new MoleculerClientError('Name already exists!', 422, '', [{ field: 'name', message: 'is exist' }]);
+        if (found) throw new MoleculerClientError('姓名已经存在!', 422, '', [{ field: 'name', message: 'is exist' }]);
 
         entity.createdAt = new Date();
 
@@ -62,15 +57,6 @@ module.exports = {
         return user;
       },
     },
-
-    list: {
-      rest: 'GET /',
-    },
-
-    get: {
-      rest: 'GET /:id',
-    },
-
     update: {
       rest: 'PUT /:id',
       params: {
@@ -98,15 +84,10 @@ module.exports = {
         return user;
       },
     },
-
     remove: {
       rest: 'DELETE /:id',
     },
   },
-
-  /**
-   * Methods
-   */
   methods: {
     async seedDB() {
       const mockData = new Array(15).fill({}).map(() => ({ id: faker.random.uuid, name: faker.name.findName() }));

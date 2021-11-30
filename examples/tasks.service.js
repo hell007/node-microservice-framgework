@@ -12,36 +12,21 @@ module.exports = {
   name: 'tasks',
   version: 1,
   mixins: [DbService('tasks'), CacheCleanerMixin(['cache.clean.tasks', 'cache.clean.users'])],
-
-  /**
-   * Default settings
-   */
   settings: {
-    /** REST Basepath */
     rest: '/tasks',
-
-    /** Public fields */
     fields: ['_id', 'description', 'state', 'user_id'],
-
-    /** Validator schema for entity */
     entityValidator: {
       description: { type: 'string', min: 10 },
       state: { type: 'enum', values: TASK_STATE_ENUMS },
     },
   },
-
-  /**
-   * Actions
-   */
   actions: {
-    /**
-     * Register a new task
-     *
-     * @actions
-     * @param {Object} task - Task entity
-     *
-     * @returns {Object} Created entity
-     */
+    list: {
+      rest: 'GET /',
+    },
+    get: {
+      rest: 'GET /:id',
+    },
     create: {
       rest: 'POST /',
       params: {
@@ -70,15 +55,6 @@ module.exports = {
         return entity;
       },
     },
-
-    list: {
-      rest: 'GET /',
-    },
-
-    get: {
-      rest: 'GET /:id',
-    },
-
     update: {
       rest: 'PUT /:id',
       params: {
@@ -113,22 +89,16 @@ module.exports = {
         return entity;
       },
     },
-
     remove: {
       rest: 'DELETE /:id',
     },
   },
-
-  /**
-   * Methods
-   */
   methods: {
     async seedDB() {
       try {
         await this.waitForServices(['v1.users']);
 
         const users = await this.broker.call('v1.users.list');
-
         const usersIds = users.rows.map(({ _id }) => _id);
 
         if (!usersIds.length) {

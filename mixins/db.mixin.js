@@ -1,9 +1,9 @@
 /*
- * @Descripttion: 
+ * @Descripttion:
  * @Author: zenghua.wang
  * @Date: 2020-11-04 10:55:25
  * @LastEditors: zenghua.wang
- * @LastEditTime: 2021-11-09 09:52:36
+ * @LastEditTime: 2021-11-29 11:21:51
  */
 'use strict';
 
@@ -19,28 +19,21 @@ module.exports = function (collection) {
   return {
     mixins: [DbService],
     adapter: new DbService.MemoryAdapter({ filename: `./data/${collection}.db` }),
-
     methods: {
       async entityChanged(type, json, ctx) {
         await this.clearCache();
-
         const eventName = `${this.name}.entity.${type}`;
-
         this.broker.emit(eventName, { meta: ctx.meta, entity: json });
       },
     },
-
     async started() {
       // Check the count of items in the DB. If it's empty,
       // call the `seedDB` method of the service.
       if (this.seedDB) {
         const count = await this.adapter.count();
-
         if (!count) {
           this.logger.info(`The '${collection}' collection is empty. Seeding the collection...`);
-
           await this.seedDB();
-
           this.logger.info('Seeding is done. Number of records:', await this.adapter.count());
         }
       }
