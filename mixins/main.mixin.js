@@ -3,7 +3,7 @@
  * @Author: zenghua.wang
  * @Date: 2021-11-30 09:22:00
  * @LastEditors: zenghua.wang
- * @LastEditTime: 2021-11-30 10:08:09
+ * @LastEditTime: 2021-12-01 15:17:13
   200 OK 客户端请求成功
   301 Moved Permanently 请求永久重定向
   302 Moved Temporarily 请求临时重定向
@@ -15,35 +15,11 @@
   500 Internal Server Error 服务器发生不可预期的错误，导致无法完成客户端的请求。
   503 Service Unavailable 服务器当前不能够处理客户端的请求，在一段时间之后，服务器可能会恢复正常
  */
+
+'use strict'
+
 module.exports = {
   methods: {
-    /**
-     * 查询列表
-     * @param {*} searchKey
-     * @param {*} searchFields
-     * @param {*} pageNum
-     * @param {*} pageSize
-     * @returns
-     */
-    async findList(searchKey = '', searchFields = [], pageNum = 1, pageSize = 10) {
-      let condition = {};
-      if (searchKey) {
-        condition.search = searchKey;
-        condition.searchFields = searchFields;
-      }
-      const total = await this.adapter.count(condition);
-      condition.limit = parseInt(pageSize);
-      condition.offset = pageSize * (pageNum - 1);
-      const data = await this.adapter.find(condition);
-      let result = {
-        rows: data,
-        total: total,
-        page: parseInt(pageNum),
-        pageSize: parseInt(pageSize),
-        totalPages: Math.ceil(total / pageSize),
-      };
-      return result;
-    },
     /**
      * 返回成功结果
      * @param {*} data
@@ -56,7 +32,7 @@ module.exports = {
         state: true,
         data: data,
         message: message,
-      };
+      }
     },
     /**
      * 返回失败结果
@@ -70,7 +46,7 @@ module.exports = {
         state: false,
         data: data,
         message: message,
-      };
+      }
     },
     /**
      * 返回错误结果
@@ -85,7 +61,7 @@ module.exports = {
         state: false,
         data: data,
         message: message,
-      };
+      }
     },
   },
-};
+}

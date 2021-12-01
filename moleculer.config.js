@@ -6,7 +6,9 @@ module.exports = {
   // Unique node identifier. Must be unique in a namespace.
   nodeID: 'node-microserives-' + process.pid,
   // Custom metadata store. Store here what you want. Accessing: `this.broker.metadata`
-  metadata: {},
+  metadata: {
+    region: 'eu-west1',
+  },
 
   // Enable/disable logging or use custom logger. More info: https://moleculer.services/docs/0.14/logging.html
   // Available logger types: "Console", "File", "Pino", "Winston", "Bunyan", "debug", "Log4js", "Datadog"
@@ -215,10 +217,6 @@ module.exports = {
 
   // Register custom REPL commands.
   replCommands: null,
-
-  metadata: {
-    region: 'eu-west1',
-  },
 
   skipProcessEventRegistration: false,
 

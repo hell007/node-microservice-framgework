@@ -1,21 +1,23 @@
 /*
+ * 参考地址：https://github.com/moleculerjs/moleculer-examples/tree/master/conduit
  * @Descripttion: 用户服务
  * @Author: zenghua.wang
  * @Date: 2020-11-04 10:55:25
  * @LastEditors: zenghua.wang
- * @LastEditTime: 2021-11-30 10:09:04
+ * @LastEditTime: 2021-12-01 14:13:33
  */
 'use strict';
 
 const Sequelize = require('sequelize');
+const Op = Sequelize.Op;
 const DbService = require('../mixins/mysql.mixin');
-const MainService = require('../mixins/main.mixin');
+const Main = require('../mixins/main.mixin');
 const Utils = require('../utils');
 
 module.exports = {
   name: 'user',
   version: 1,
-  mixins: [DbService(), MainService],
+  mixins: [DbService(), Main],
   model: {
     name: 'user',
     define: {
@@ -46,7 +48,7 @@ module.exports = {
     // REST Basepath
     rest: '/user',
     // Public fields
-    fields: ['id', 'roleId', 'userName', 'mobile', 'status', 'email'],
+    fields: ['id', 'roleId', 'username', 'mobile', 'status', 'email'],
     pageSize: 10,
     // Validator schema for entity
     entityValidator: {
@@ -54,36 +56,58 @@ module.exports = {
       mobile: { type: Number, min: 11, max: 11 },
     },
   },
+  // hooks案列
+  // hooks: {
+  //   after: {
+  //     '*': function(ctx, res)  {
+  //       // function 可以获取到this.setting,使用箭头函数获取不到
+  //       // console.log(71, this.settings)
+  //       this.logger.info('service hooks 测试')
+  //       return res;
+  //     },
+  //   },
+  // },
   actions: {
+    // 分页查询
     list: {
       rest: 'GET /',
-    },
-    // 根据关键字分页查询
-    getUserList: {
-      rest: 'GET /getUserList',
       params: {
         name: { type: String },
         pageNum: { type: Number },
         pageSize: { type: Number },
       },
       async handler(ctx) {
-        return this.findList(ctx.params.name, ['username'], ctx.params.pageNum, ctx.params.pageSize);
+        let pageNum = ctx.params.pageNum;
+        let pageSize = ctx.params.pageSize;
+        let name = ctx.params.name;
+        let searchFields = ['username'];
+        let res = await this.findList(name, searchFields, pageNum, pageSize);
+        res.rows = this.entityFilter(this.settings.fields, res.rows);
+        return res;
       },
     },
+    // id查询
     get: {
       rest: 'GET /:id',
-    },
-    // 根据id查询用户
-    getUser: {
-      rest: 'GET /getUser',
       params: {
         id: { type: String },
       },
+      hooks: {
+        // before(ctx) {
+        //   this.logger.info('action hooks 测试');
+        // },
+        after(ctx, res) {
+          let row = this.entityFilter(this.settings.fields, res);
+          return this.ok(row);
+        },
+      },
       async handler(ctx) {
-        return this.adapter.findById(ctx.params.id);
+        const doc = await this.adapter.findById(ctx.params.id);
+        let user = this.adapter.entityToObject(doc);
+        return user;
       },
     },
-    // 增
+    // 新增
     create: {
       rest: 'POST /',
       params: {
@@ -100,33 +124,34 @@ module.exports = {
 
         entity.createTime = new Date();
         const doc = await this.adapter.insert(entity);
-        return this.ok();
+        return this.ok(this.adapter.entityToObject(doc));
       },
     },
-    // 删
+    // 删除
+    // remove: {
+    //   rest: 'DELETE /:id',
+    // },
     remove: {
-      rest: 'DELETE /:id',
-    },
-    deleteUser: {
-      rest: 'DELETE /deleteUser',
+      rest: 'DELETE /',
       params: {
         ids: { type: Array },
       },
       async handler(ctx) {
         let ids = ctx.params.ids;
-        let list = await this.adapter.findByIds(ids);
+        let res = await this.adapter.findByIds(ids);
+        let list = res.map(this.adapter.entityToObject);
         if (Utils.isEmpty(list)) {
           this.logger.error('你想要删除的用户未存在！');
           return this.error();
         }
 
-        list.forEach((id) => {
-          this.adapter.removeById(id);
+        list.forEach((item) => {
+          this.adapter.removeById(item.id);
         });
-        return this.ok();
+        return this.ok(list);
       },
     },
-    // 改
+    // 修改
     update: {
       rest: 'PUT /',
       params: {
@@ -146,11 +171,9 @@ module.exports = {
           ['$set']: entity,
         };
         const doc = await this.adapter.updateById(entity.id, update);
-        return this.ok();
+        return this.ok(this.adapter.entityToObject(doc));
       },
     },
   },
-  methods: {
-    // async seedDB() {},
-  },
+  methods: {},
 };

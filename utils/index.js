@@ -3,8 +3,12 @@
  * @Author: zenghua.wang
  * @Date: 2021-11-29 11:24:52
  * @LastEditors: zenghua.wang
- * @LastEditTime: 2021-11-30 09:21:19
+ * @LastEditTime: 2021-11-30 16:59:43
  */
+
+'use strict'
+
+const UUID = require('uuid')
 
 module.exports = {
   /**
@@ -13,7 +17,7 @@ module.exports = {
    * @param {*} val
    * @returns
    */
-  isEmpty(val) {
+  isEmpty: (val) => {
     if (val && parseInt(val) === 0) return false
     if (
       typeof val === 'undefined' ||
@@ -31,5 +35,8 @@ module.exports = {
     } else {
       return false
     }
+  },
+  setUUID: () => {
+    return UUID.v1().toString().replace(/-/g, '')
   },
 }
