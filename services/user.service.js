@@ -4,7 +4,7 @@
  * @Author: zenghua.wang
  * @Date: 2020-11-04 10:55:25
  * @LastEditors: zenghua.wang
- * @LastEditTime: 2021-12-01 14:13:33
+ * @LastEditTime: 2021-12-02 10:29:05
  */
 'use strict';
 
@@ -48,11 +48,18 @@ module.exports = {
     // REST Basepath
     rest: '/user',
     // Public fields
-    fields: ['id', 'roleId', 'username', 'mobile', 'status', 'email'],
-    pageSize: 10,
+    fields: ['id', 'roleId', 'username', 'roleName', 'mobile', 'status', 'email'],
+    populates: {
+      roleId: {
+        action: 'role.get',
+        params: {
+          fields: ['roleName'],
+        },
+      },
+    },
     // Validator schema for entity
     entityValidator: {
-      name: { type: String, min: 2 },
+      username: { type: String, min: 2 },
       mobile: { type: Number, min: 11, max: 11 },
     },
   },
@@ -60,8 +67,7 @@ module.exports = {
   // hooks: {
   //   after: {
   //     '*': function(ctx, res)  {
-  //       // function 可以获取到this.setting,使用箭头函数获取不到
-  //       // console.log(71, this.settings)
+  //       // function / (){} 可以获取到this.setting,使用箭头函数获取不到
   //       this.logger.info('service hooks 测试')
   //       return res;
   //     },
@@ -104,6 +110,10 @@ module.exports = {
       async handler(ctx) {
         const doc = await this.adapter.findById(ctx.params.id);
         let user = this.adapter.entityToObject(doc);
+        await ctx.call('v1.role.roleName', { id: user.roleId }).then((role) => {
+          user.roleName = role.roleName;
+          return user;
+        });
         return user;
       },
     },
@@ -116,7 +126,7 @@ module.exports = {
       async handler(ctx) {
         let entity = ctx.params.user;
         await this.validateEntity(entity);
-        const user = await this.adapter.find({ query: { username: entity.username } });
+        const user = await this.adapter.findOne({ query: { username: entity.username } });
         if (!Utils.isEmpty(user)) {
           this.logger.error('username or mobile is exist');
           return this.error('用户名或手机号已经存在!');

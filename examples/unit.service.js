@@ -1,27 +1,26 @@
 /*
  * @Descripttion:
  * @Author: zenghua.wang
- * @Date: 2020-11-04 10:55:25
+ * @Date: 2021-11-09 10:30:56
  * @LastEditors: zenghua.wang
- * @LastEditTime: 2021-11-26 17:44:33
+ * @LastEditTime: 2021-12-02 10:56:23
  */
 'use strict';
 
-const { MoleculerClientError } = require('moleculer').Errors;
 const faker = require('faker');
 
 const DbService = require('../mixins/db.mixin');
 const CacheCleanerMixin = require('../mixins/cache.cleaner.mixin');
 
 module.exports = {
-  name: 'users',
+  name: 'unit',
   version: 1,
-  mixins: [DbService('users'), CacheCleanerMixin(['cache.clean.users', 'cache.clean.tasks'])],
+  mixins: [DbService('unit'), CacheCleanerMixin(['cache.clean.unit', 'cache.clean.task'])],
   settings: {
     // REST Basepath
-    rest: '/users',
+    rest: '/unit',
     // Public fields
-    fields: ['_id', 'name', 'age'],
+    fields: ['_id', 'name', 'author'],
     // pageSize: 10,
     // Validator schema for entity
     entityValidator: {
@@ -29,19 +28,37 @@ module.exports = {
     },
   },
   actions: {
+    hello() {
+      return 'Hello Moleculer';
+    },
+    welcome: {
+      params: {
+        name: 'string',
+      },
+      handler(ctx) {
+        return `Welcome, ${ctx.params.name}`;
+      },
+    },
     list: {
       rest: 'GET /',
     },
     get: {
       rest: 'GET /:id',
     },
+    test: {
+      rest: 'GET /test',
+      async handler(ctx) {
+        let res = await this.adapter.find({ limit: 5, offset: 0, sort: ['name'], fields: ['name', 'author'] });
+        return res;
+      },
+    },
     create: {
       rest: 'POST /',
       params: {
-        user: { type: 'object' },
+        unit: { type: 'object' },
       },
       async handler(ctx) {
-        let entity = ctx.params.user;
+        let entity = ctx.params.unit;
         await this.validateEntity(entity);
         const found = await this.adapter.findOne({ name: entity.name });
 
@@ -50,20 +67,20 @@ module.exports = {
         entity.createdAt = new Date();
 
         const doc = await this.adapter.insert(entity);
-        const user = await this.transformDocuments(ctx, {}, doc);
+        const unit = await this.transformDocuments(ctx, {}, doc);
 
-        await this.entityChanged('created', user, ctx);
+        await this.entityChanged('created', unit, ctx);
 
-        return user;
+        return unit;
       },
     },
     update: {
       rest: 'PUT /:id',
       params: {
-        user: { type: 'object' },
+        unit: { type: 'object' },
       },
       async handler(ctx) {
-        let entity = ctx.params.user;
+        let entity = ctx.params.unit;
         await this.validateEntity(entity);
         const found = await this.adapter.findOne({ name: entity.name });
 
@@ -76,21 +93,24 @@ module.exports = {
           ['$set']: entity,
         };
 
-        const doc = await this.adapter.updateById(ctx.meta.user._id, update);
-        const user = await this.transformDocuments(ctx, {}, doc);
+        const doc = await this.adapter.updateById(ctx.meta.unit._id, update);
+        const unit = await this.transformDocuments(ctx, {}, doc);
 
-        await this.entityChanged('updatead', user, ctx);
+        await this.entityChanged('updatead', unit, ctx);
 
-        return user;
+        return unit;
       },
     },
     remove: {
       rest: 'DELETE /:id',
     },
   },
+  events: {},
   methods: {
     async seedDB() {
-      const mockData = new Array(15).fill({}).map(() => ({ id: faker.random.uuid, name: faker.name.findName() }));
+      const mockData = new Array(15)
+        .fill({})
+        .map(() => ({ id: faker.random.uuid, name: faker.name.findName(), author: null }));
 
       await this.adapter.insertMany(mockData);
     },

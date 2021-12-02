@@ -9,12 +9,12 @@ const CacheCleanerMixin = require('../mixins/cache.cleaner.mixin');
 const TASK_STATE_ENUMS = ['TO_DO', 'DONE'];
 
 module.exports = {
-  name: 'tasks',
+  name: 'task',
   version: 1,
-  mixins: [DbService('tasks'), CacheCleanerMixin(['cache.clean.tasks', 'cache.clean.users'])],
+  mixins: [DbService('task'), CacheCleanerMixin(['cache.clean.task', 'cache.clean.unit'])],
   settings: {
-    rest: '/tasks',
-    fields: ['_id', 'description', 'state', 'user_id'],
+    rest: '/task',
+    fields: ['_id', 'description', 'state', 'unit_id'],
     entityValidator: {
       description: { type: 'string', min: 10 },
       state: { type: 'enum', values: TASK_STATE_ENUMS },
@@ -39,11 +39,11 @@ module.exports = {
 
         const found = await this.adapter.findOne({
           description: entity.description,
-          user_id: entity.user_id,
+          unit_id: entity.unit_id,
         });
 
         if (found)
-          throw new MoleculerClientError('Task with this description for this user already exists!', 422, '', [
+          throw new MoleculerClientError('Task with this description for this unit already exists!', 422, '', [
             { field: 'description', message: 'is exist' },
           ]);
 
@@ -67,11 +67,11 @@ module.exports = {
 
         const found = await this.adapter.findOne({
           description: entity.description,
-          user_id: entity.user_id,
+          unit_id: entity.unit_id,
         });
 
         if (found)
-          throw new MoleculerClientError('Task with this description for this user already exists!', 422, '', [
+          throw new MoleculerClientError('Task with this description for this unit already exists!', 422, '', [
             { field: 'description', message: 'is exist' },
           ]);
 
@@ -82,9 +82,9 @@ module.exports = {
         };
 
         const doc = await this.adapter.updateById(ctx.meta.task._id, update);
-        const user = await this.transformDocuments(ctx, {}, doc);
+        const unit = await this.transformDocuments(ctx, {}, doc);
 
-        await this.entityChanged('updatead', user, ctx);
+        await this.entityChanged('updatead', unit, ctx);
 
         return entity;
       },
@@ -96,31 +96,31 @@ module.exports = {
   methods: {
     async seedDB() {
       try {
-        await this.waitForServices(['v1.users']);
+        await this.waitForServices(['v1.unit']);
 
-        const users = await this.broker.call('v1.users.list');
-        const usersIds = users.rows.map(({ _id }) => _id);
+        const unit = await this.broker.call('v1.unit.list');
+        const unitIds = unit.rows.map(({ _id }) => _id);
 
-        if (!usersIds.length) {
-          this.logger.info('Waiting for `users` seed...');
+        if (!unitIds.length) {
+          this.logger.info('Waiting for `unit` seed...');
           setTimeout(this.seedDB, 1000);
 
           return;
         }
 
-        const tasks = new Array(30).fill({}).map(() => ({
+        const task = new Array(30).fill({}).map(() => ({
           _id: faker.random.uuid,
           description: faker.hacker.phrase,
           state: faker.random.arrayElement(TASK_STATE_ENUMS),
-          user_id: faker.random.arrayElement(usersIds),
+          unit_id: faker.random.arrayElement(unitIds),
         }));
 
-        await this.adapter.insertMany(tasks);
+        await this.adapter.insertMany(task);
 
-        this.logger.info(`Generated ${tasks.length} tasks!`);
+        this.logger.info(`Generated ${task.length} task!`);
       } catch (error) {
         if (error.name === 'ServiceNotFoundError') {
-          this.logger.info('Waiting for `users` service...');
+          this.logger.info('Waiting for `unit` service...');
 
           setTimeout(this.seedDB, 1000);
         } else throw error;
