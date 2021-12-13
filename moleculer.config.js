@@ -7,7 +7,7 @@ module.exports = {
   nodeID: 'node-microserives-' + process.pid,
   // Custom metadata store. Store here what you want. Accessing: `this.broker.metadata`
   metadata: {
-    region: 'eu-west1',
+    region: 'admin',
   },
 
   // Enable/disable logging or use custom logger. More info: https://moleculer.services/docs/0.14/logging.html
@@ -169,7 +169,7 @@ module.exports = {
   cacher: {
     type: 'memory',
     options: {
-      ttl: 30, // 30 seconds
+      ttl: 0, // 30 seconds
     },
   },
 

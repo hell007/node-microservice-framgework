@@ -4,7 +4,7 @@
  * @Author: zenghua.wang
  * @Date: 2020-11-04 10:55:25
  * @LastEditors: zenghua.wang
- * @LastEditTime: 2021-12-02 10:29:05
+ * @LastEditTime: 2021-12-13 10:14:21
  */
 'use strict';
 
@@ -13,6 +13,7 @@ const Op = Sequelize.Op;
 const DbService = require('../mixins/mysql.mixin');
 const Main = require('../mixins/main.mixin');
 const Utils = require('../utils');
+// const MDbService = require('moleculer-db');
 
 module.exports = {
   name: 'user',
@@ -83,12 +84,16 @@ module.exports = {
         pageSize: { type: Number },
       },
       async handler(ctx) {
-        let pageNum = ctx.params.pageNum;
-        let pageSize = ctx.params.pageSize;
-        let name = ctx.params.name;
-        let searchFields = ['username'];
-        let res = await this.findList(name, searchFields, pageNum, pageSize);
-        res.rows = this.entityFilter(this.settings.fields, res.rows);
+        let condition = {
+          fields: ['id', 'roleId', 'username', 'mobile', 'status', 'email'],
+          search: ctx.params.name,
+          searchFields: ['username'],
+          query: {},
+          page: ctx.params.pageNum || 1,
+          pageSize: ctx.params.pageSize || 10,
+          sort: ['createTime'],
+        };
+        let res = await this.findList(condition);
         return res;
       },
     },
@@ -103,13 +108,12 @@ module.exports = {
         //   this.logger.info('action hooks 测试');
         // },
         after(ctx, res) {
-          let row = this.entityFilter(this.settings.fields, res);
-          return this.ok(row);
+          return this.ok(res);
         },
       },
       async handler(ctx) {
-        const doc = await this.adapter.findById(ctx.params.id);
-        let user = this.adapter.entityToObject(doc);
+        let doc = await this.adapter.findById(ctx.params.id);
+        let user = await this.transformDocuments(ctx, { fields: this.settings.fields }, doc);
         await ctx.call('v1.role.roleName', { id: user.roleId }).then((role) => {
           user.roleName = role.roleName;
           return user;
@@ -182,6 +186,74 @@ module.exports = {
         };
         const doc = await this.adapter.updateById(entity.id, update);
         return this.ok(this.adapter.entityToObject(doc));
+      },
+    },
+    test: {
+      rest: 'GET /test/:id',
+      params: {},
+      async handler(ctx) {
+        // 1. transformDocuments 过滤字段... 更多用途参看源码
+        // const doc = await this.adapter.findById(ctx.params.id);
+        // let user = await this.transformDocuments(ctx, { fields: ['id', 'username', 'roleId'] }, doc);
+        // return user;
+        // 2.过滤字段
+        // const doc = await this.adapter.findById(ctx.params.id);
+        // return this.filterFields(doc, ['id','username'])
+        // 3.methods使用
+        // let params = this.sanitizeParams(ctx, ctx.params);
+        // return params
+        // _count
+        // return this._count(ctx, {})
+        // _find
+        // return this._find(ctx, {});
+        // return this._find(ctx, { fields: ['id', 'username'] });
+        // _list
+        // return this._list(ctx, { page: 1, pageSize: 10, fields: ['username'], sort: ['createTime'] });
+        // let params = { page: 1, pageSize: 10, fields: ['id', 'username'], sort: ['createTime'] };
+        // return this._list(ctx, params);
+        // _get
+        // return this._get(ctx, ctx.params);
+        // 4、adapter适配器扩展使用
+        // let condition = {
+        //   fields: ['id', 'roleId', 'username', 'mobile', 'status', 'email'],
+        //   search: ctx.params.name,
+        //   searchFields: ['username'],
+        //   query: {},
+        //   page: ctx.params.pageNum || 1,
+        //   pageSize: ctx.params.pageSize || 10,
+        //   sort: ['createTime'],
+        // };
+        // 4.1. 使用适配器的methods
+        // let params = this.sanitizeParams(ctx, condition);
+        // return this._list(ctx, params);
+        // 4.2. 使用自定义的methods
+        // let res = await this.findList(condition);
+        // return res;
+        // 5. 使用原生语句查询
+        // // total
+        // let sql1 = 'SELECT count(*) as count FROM jie_user where status = :status';
+        // let doc1 = await this.adapter.query({
+        //   sql: sql1,
+        //   replacements: { status: 1 },
+        //   type: Sequelize.QueryTypes.SELECT,
+        //   plain: true,
+        // });
+        // const total = await doc1.map(this.adapter.entityToObject)[0]['count'];
+        // // rows
+        // let sql2 = 'SELECT id, role_id, username FROM jie_user where status = :status';
+        // let doc2 = await this.adapter.query({
+        //   sql: sql2,
+        //   replacements: { status: 1 },
+        //   type: Sequelize.QueryTypes.SELECT,
+        // });
+        // const rows = doc2.map(this.adapter.entityToObject);
+        // return {
+        //   rows: rows,
+        //   total: total,
+        //   // page: Number(pageNum),
+        //   // pageSize: Number(pageSize),
+        //   // totalPages: Math.ceil(total / pageSize),
+        // };
       },
     },
   },

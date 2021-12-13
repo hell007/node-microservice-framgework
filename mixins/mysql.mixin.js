@@ -3,14 +3,13 @@
  * @Author: zenghua.wang
  * @Date: 2021-11-26 15:48:07
  * @LastEditors: zenghua.wang
- * @LastEditTime: 2021-12-01 16:09:54
+ * @LastEditTime: 2021-12-08 17:15:25
  */
 'use strict';
 
 const DbService = require('moleculer-db');
+// 根据自我需求修改过的 moleculer-db-adapter-sequelize
 const SqlAdapter = require('moleculer-db-adapter-sequelize');
-const Utils = require('../utils');
-// const Db = require('../utils/hleper');
 
 module.exports = function () {
   return {
@@ -32,31 +31,14 @@ module.exports = function () {
     methods: {
       /**
        * 查询列表
-       * @param {*} searchKey
-       * @param {*} searchFields
-       * @param {*} pageNum
-       * @param {*} pageSize
+       * @param {*} condition
+       * condition与find相同
        * @returns
        */
-      async findList(searchKey, searchFields = [], pageNum = 1, pageSize = 10, query = {}, sort = []) {
-        let condition = {};
-        // search
-        if (searchKey) {
-          condition.search = searchKey;
-          condition.searchFields = searchFields;
-        }
-        // where
-        if (Object.keys(query).length > 0) {
-          condition.query = query;
-        }
+      async findList(condition) {
+        let pageNum = condition.page || 1;
+        let pageSize = condition.pageSize || 10;
         const total = await this.adapter.count(condition);
-        // page
-        condition.limit = Number(pageSize);
-        condition.offset = pageSize * (pageNum - 1);
-        // sort
-        if (sort && sort.length > 0) {
-          condition.sort = sort;
-        }
         const data = await this.adapter.find(condition);
         let result = {
           rows: data,
@@ -66,40 +48,6 @@ module.exports = function () {
           totalPages: Math.ceil(total / pageSize),
         };
         return result;
-      },
-      // async findBySql() {
-      //   let test = await Db.query('SELECT * FROM jie_user', {
-      //     // model: model,
-      //     //mapToModel: true // 如果你有任何映射字段,则在此处传递 true
-      //   });
-      //   console.log(75, test);
-      //   return test
-      // },
-      /**
-       * 针对修改的action不能使用setting.fields返回字段的过滤处理
-       * @param {*} fields
-       * @param {*} rows
-       * @returns
-       */
-      entityFilter(fields = [], rows) {
-        if (Utils.isEmpty(fields) || Utils.isEmpty(rows)) return null;
-        if (Array.isArray(rows)) {
-          let list = [];
-          rows.map((item) => {
-            let temp = {};
-            fields.forEach((field) => {
-              temp[field] = item[field];
-            });
-            list.push(temp);
-          });
-          return list;
-        } else {
-          let row = {};
-          fields.forEach((field) => {
-            row[field] = rows[field];
-          });
-          return row;
-        }
       },
     },
     started() {},

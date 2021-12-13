@@ -3,7 +3,7 @@
  * @Author: zenghua.wang
  * @Date: 2021-12-02 09:16:25
  * @LastEditors: zenghua.wang
- * @LastEditTime: 2021-12-02 10:33:20
+ * @LastEditTime: 2021-12-13 10:31:21
  */
 'use strict';
 
@@ -50,12 +50,14 @@ module.exports = {
         pageSize: { type: Number },
       },
       async handler(ctx) {
-        let pageNum = ctx.params.pageNum;
-        let pageSize = ctx.params.pageSize;
-        let name = ctx.params.name;
-        let searchFields = ['roleName'];
-        let res = await this.findList(name, searchFields, pageNum, pageSize);
-        res.rows = this.entityFilter(this.settings.fields, res.rows);
+        let condition = {
+          search: ctx.params.name,
+          searchFields: ['roleName'],
+          query: {},
+          page: ctx.params.pageNum || 1,
+          pageSize: ctx.params.pageSize || 10,
+        };
+        let res = await this.findList(condition);
         return res;
       },
     },
@@ -67,15 +69,18 @@ module.exports = {
     },
     get: {
       rest: 'GET /:id',
-      params: {
-        id: { type: String },
-      },
-      async handler(ctx) {
-        const doc = await this.adapter.findById(ctx.params.id);
-        let role = this.adapter.entityToObject(doc);
-        return this.ok(role);
-      },
     },
+    // get: {
+    //   rest: 'GET /:id',
+    //   params: {
+    //     id: { type: String },
+    //   },
+    //   async handler(ctx) {
+    //     const doc = await this.adapter.findById(ctx.params.id);
+    //     let role = this.adapter.entityToObject(doc);
+    //     return this.ok(role);
+    //   },
+    // },
     create: {
       rest: 'POST /',
       params: {
@@ -108,7 +113,6 @@ module.exports = {
           return this.error();
         }
 
-        entity.loginTime = new Date();
         const update = {
           ['$set']: entity,
         };

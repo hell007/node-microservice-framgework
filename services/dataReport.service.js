@@ -3,7 +3,7 @@
  * @Author: zenghua.wang
  * @Date: 2021-11-30 10:42:59
  * @LastEditors: zenghua.wang
- * @LastEditTime: 2021-12-01 16:10:13
+ * @LastEditTime: 2021-12-13 10:29:17
  */
 'use strict';
 
@@ -44,7 +44,7 @@ module.exports = {
   },
   settings: {
     rest: '/data-report',
-    fields: ['id', 'reportName', 'reportKey', 'type', 'creator', 'updator', 'createTime', 'updateTime'],
+    fields: ['id', 'reportName', 'reportKey', 'type', 'list', 'creator', 'updator', 'createTime', 'updateTime'],
     entityValidator: {
       reportName: { type: String, min: 2 },
       reportKey: { type: String, min: 2 },
@@ -59,28 +59,29 @@ module.exports = {
         pageSize: { type: Number },
       },
       async handler(ctx) {
-        let pageNum = ctx.params.pageNum;
-        let pageSize = ctx.params.pageSize;
-        let name = ctx.params.name;
-        let searchFields = ['reportName', 'reportKey'];
-        let sort = ['updateTime', '-createTime'];
-        let query = { type: { [Op.eq]: 'report' }, deleteFlag: { [Op.eq]: 2 } };
-        let res = await this.findList(name, searchFields, pageNum, pageSize, query, sort);
-        res.rows = this.entityFilter(this.settings.fields, res.rows);
+        let condition = {
+          fields: ['id', 'reportName', 'reportKey', 'type', 'createTime', 'updateTime'],
+          search: ctx.params.name,
+          searchFields: ['reportName', 'reportKey'],
+          query: { type: { [Op.eq]: 'report' }, deleteFlag: { [Op.eq]: 2 } },
+          page: ctx.params.pageNum || 1,
+          pageSize: ctx.params.pageSize || 10,
+          sort: ['updateTime', '-createTime'],
+        };
+        let res = await this.findList(condition);
         return res;
       },
     },
     get: {
       rest: 'GET /:id',
       async handler(ctx) {
-        const entity = await this.adapter.findById(ctx.params.id);
-        let report = this.adapter.entityToObject(entity);
+        let doc = await this.adapter.findById(ctx.params.id);
+        const fields = ['id', 'reportName', 'reportKey', 'type', 'list'];
+        let report = await this.transformDocuments(ctx, { fields: fields }, doc);
         if (Utils.isEmpty(report)) {
           this.logger.error('报表模型不存在！');
           return this.error();
         }
-        let fields = ['id', 'reportName', 'reportKey', 'type', 'list'];
-        report = this.entityFilter(fields, report);
         report.list = JSON.parse(report.list);
         return this.ok(report);
       },
